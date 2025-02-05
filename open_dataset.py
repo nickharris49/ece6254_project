@@ -51,7 +51,7 @@ def get_bioz_from_subject(subject: int, missing_inds=[], exo=False, ak_or_kn=Fal
         print(np.shape(walking_data[i].BioZ1.Data[0]))
     for i in range(30):
         if np.shape(walking_data[i].BioZ1.Data[0])[0] == 0 or i + 1 in missing_inds:
-            print("MISSING DATA FROM SUBJECT " + str(subject) + " AT g" + str(i+1) + ". " + ("EXO" if exo else "NO EXO"))
+            print("MISSING BIOZ DATA FROM SUBJECT " + str(subject) + " AT TRIAL " + str(i+1) + ". " + ("EXO" if exo else "NO EXO"))
             continue
         bioz_5k_resistance.append(scipy.signal.resample(walking_data[i].BioZ1.Data[0][:,1], 6000))
         bioz_5k_reactance.append(scipy.signal.resample(walking_data[i].BioZ1.Data[0][:,2], 6000))
@@ -89,7 +89,7 @@ def get_biomech_from_subject(subject: int, exo=False):
         try:
             angles = walking_data['g' + str(i)]
         except:
-            print("MISSING DATA FROM SUBJECT " + str(subject) + " AT g" + str(i) + ". " + ("EXO" if exo else "NO EXO"))
+            print("MISSING MECH DATA FROM SUBJECT " + str(subject) + " AT g" + str(i) + ". " + ("EXO" if exo else "NO EXO"))
             missing_inds.append(i)
             continue
         hip_flexion_r.append(angles['hip_flexion_r'])
@@ -110,7 +110,7 @@ def get_biomech_from_subject(subject: int, exo=False):
 
 def main():
     base_path = get_path_to_dataset()
-    subject = 3
+    subject = 11
     ## ANKLE WORN ON RIGHT LEG
     ## KNEE WORN ON LEFT LEG
 
@@ -126,6 +126,8 @@ def main():
 
     #get_biomech_from_subject(subject)
     mech_vals, missing_inds = get_biomech_from_subject(subject)
+    ankle_bioz = get_bioz_from_subject(subject, missing_inds, ak_or_kn=True)
+    knee_bioz = get_bioz_from_subject(subject, missing_inds, ak_or_kn=False)
     recarray = np.ones(np.shape(np.squeeze(mech_vals[0])), dtype=dtype)
 
     for i, mech_val in enumerate(mech_vals):
@@ -141,7 +143,6 @@ def main():
     # plt.show(block=True)
     
     ## ankle bioz
-    ankle_bioz = get_bioz_from_subject(subject, missing_inds, ak_or_kn=True)
     for i, bioz_val in enumerate(ankle_bioz):
         recarray[bioz_keys[i]] = bioz_val
     # ankle_bioz_5k_resistance, ankle_bioz_5k_reactance, ankle_bioz_100k_resistance, ankle_bioz_100k_reactance = get_bioz_from_subject(subject, ak_or_kn=True)
@@ -155,7 +156,6 @@ def main():
     #     plt.show(block=False)
     # plt.show(block=True)
     ## knee bioz
-    knee_bioz = get_bioz_from_subject(subject, missing_inds, ak_or_kn=False)
     for i, bioz_val in enumerate(knee_bioz):
         recarray[bioz_keys[i+4]] = bioz_val
     #knee_bioz_5k_resistance, knee_bioz_5k_reactance, knee_bioz_100k_resistance, knee_bioz_100k_reactance = get_bioz_from_subject(subject, ak_or_kn=False)
