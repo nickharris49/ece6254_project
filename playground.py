@@ -88,7 +88,7 @@ def main():
         ax.plot(AverageStepsPerWindow[i], c="blue", alpha=(i/Windows))
     plt.tight_layout()
     plt.show()
-    bitch = 1
+    ending = 1
     
 
 

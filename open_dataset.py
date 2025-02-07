@@ -125,9 +125,9 @@ def main():
         dtype.append((key, 'f8'))
 
     #get_biomech_from_subject(subject)
-    mech_vals, missing_inds = get_biomech_from_subject(subject)
-    ankle_bioz = get_bioz_from_subject(subject, missing_inds, ak_or_kn=True)
-    knee_bioz = get_bioz_from_subject(subject, missing_inds, ak_or_kn=False)
+    mech_vals, missing_inds = get_biomech_from_subject(subject, exo=True)
+    ankle_bioz = get_bioz_from_subject(subject, missing_inds, ak_or_kn=True, exo=True)
+    knee_bioz = get_bioz_from_subject(subject, missing_inds, ak_or_kn=False, exo=True)
     recarray = np.ones(np.shape(np.squeeze(mech_vals[0])), dtype=dtype)
 
     for i, mech_val in enumerate(mech_vals):
@@ -187,7 +187,7 @@ def main():
     axs[7].plot(recarray['ankle_angle_r'][0][3000:3500])
     plt.show(block=True)
 
-    np.save(base_path + '/resampled_' + str(subject) + '.npy', recarray)
+    np.save(base_path + '/resampled_exo_' + str(subject) + '.npy', recarray)
     # for key in mech_keys:
     #     dtype.append((key, 'f8'))
     dumy=1
