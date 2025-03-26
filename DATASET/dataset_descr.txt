@@ -1,0 +1,27 @@
+Little bit of info on how the data has been organized.
+
+The total length of usable data is ~1.3 million samples
+All data has been resampled to 100Hz, meaning that there are about 13k seconds, or ~2k minutes of data.
+
+There are four files in the dataset, all of which can be loaded into a python script
+or jupyter notebook with the np.load('filename.npy') command.
+
+feature_vector_full.npy is 4x1338000
+index 0 is 5k resistance
+index 1 is 5k reactance
+index 2 is 100k resistance
+index 3 is 100k reactance
+
+feature_vector_5k.npy is 2x1338000
+index 0 is 5k resistance
+index 1 is 5k reactance
+
+feature_vector_100k.npy is 2x1338000
+index 0 is 100k resistance
+index 1 is 100k reactance
+
+y.npy is 1338000x1, so you shouldn't actually need to index into it or anything
+this timeseries is the knee angle for the left leg, where the bioimpedance sensing device is worn
+
+To create the train/test split, use the following method
+sklearn.model_selection.train_test_split(X, y, test_size=0.2, random_state=42)

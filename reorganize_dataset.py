@@ -1,3 +1,5 @@
+## KNEE BIOIMPEDANCE DEVICE WORN ON LEFT LEG
+
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
