@@ -39,9 +39,9 @@ def main():
     r100k = np.expand_dims(np.concatenate(r100k, axis=0), axis=1)
     x100k = np.expand_dims(np.concatenate(x100k, axis=0), axis=1)
 
-    feat_vec_5k = np.concatenate((r5k, x5k), axis=1).T
-    feat_vec_100k = np.concatenate((r100k, x100k), axis=1).T
-    feat_vec_full = np.concatenate((r5k, x5k, r100k, x100k), axis=1).T
+    feat_vec_5k = np.concatenate((r5k, x5k), axis=1)
+    feat_vec_100k = np.concatenate((r100k, x100k), axis=1)
+    feat_vec_full = np.concatenate((r5k, x5k, r100k, x100k), axis=1)
 
     np.save(full_path + "feature_vector_5k.npy", feat_vec_5k)
     np.save(full_path + "feature_vector_100k.npy", feat_vec_100k)
