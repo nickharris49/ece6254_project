@@ -27,11 +27,11 @@ def main():
     for data_file in data_files:
         data = np.load(full_path + data_file)
         for window in data:
-            y.append(window['knee_angle_l'])
-            r5k.append(window['knee_bioz_5k_resistance'])
-            x5k.append(window['knee_bioz_5k_reactance'])
-            r100k.append(window['knee_bioz_100k_resistance'])
-            x100k.append(window['knee_bioz_100k_reactance'])
+            y.append((window['knee_angle_l'] - np.mean(window['knee_angle_l'])) / np.std(window['knee_angle_l']))
+            r5k.append((window['knee_bioz_5k_resistance'] - np.mean(window['knee_bioz_5k_resistance'])) / np.std(window['knee_bioz_5k_resistance']))
+            x5k.append((window['knee_bioz_5k_reactance'] - np.mean(window['knee_bioz_5k_reactance'])) / np.std(window['knee_bioz_5k_reactance']))
+            r100k.append((window['knee_bioz_100k_resistance'] - np.mean(window['knee_bioz_100k_resistance'])) / np.std(window['knee_bioz_100k_resistance']))
+            x100k.append((window['knee_bioz_100k_reactance'] - np.mean(window['knee_bioz_100k_reactance'])) / np.std(window['knee_bioz_100k_reactance']))
     
     y = np.expand_dims(np.concatenate(y, axis=0), axis=1)
     r5k = np.expand_dims(np.concatenate(r5k, axis=0), axis=1)
@@ -43,10 +43,10 @@ def main():
     feat_vec_100k = np.concatenate((r100k, x100k), axis=1)
     feat_vec_full = np.concatenate((r5k, x5k, r100k, x100k), axis=1)
 
-    np.save(full_path + "feature_vector_5k.npy", feat_vec_5k)
-    np.save(full_path + "feature_vector_100k.npy", feat_vec_100k)
-    np.save(full_path + "feature_vector_full.npy", feat_vec_full)
-    np.save(full_path + "y.npy", y)
+    np.save(full_path + "feature_vector_5k_normalized.npy", feat_vec_5k)
+    np.save(full_path + "feature_vector_100k_normalized.npy", feat_vec_100k)
+    np.save(full_path + "feature_vector_full_normalized.npy", feat_vec_full)
+    np.save(full_path + "y_normalized.npy", y)
 
 if __name__ == '__main__':
     main()
