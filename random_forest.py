@@ -1,51 +1,50 @@
+"""
+This script trains two regression models (Random Forest and XGBoost).
+
+1. Loads data from the "./DATASET/" directory.
+2. Splits the data into training, validation, and test sets.
+3. Tunes hyperparameters for both Random Forest and XGBoost using Optuna.
+4. Trains both models using the best hyperparameters found.
+5. Evaluates the models on validation and test sets, showing the following metrics:
+   - Mean Squared Error (MSE)
+   - Mean Absolute Error (MAE)
+   - R2 Score (how well the model fits the data)
+
+### Dependencies:
+- `numpy`
+- `optuna`
+- `scikit-learn`
+- `tqdm`
+- `xgboost`
+"""
+
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
-import statsmodels.api as sm
-from sklearn.model_selection import train_test_split
-from statsmodels.stats.outliers_influence import variance_inflation_factor
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error
-from xgboost import XGBRegressor
 import time
-from tqdm import tqdm
 import optuna
+from tqdm import tqdm
+from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from xgboost import XGBRegressor
 
-def check_outliers(X_train, y_train):
-    model = sm.OLS(y_train, sm.add_constant(X_train)).fit()
-    influence = model.get_influence()
-    cooks_d = influence.cooks_distance[0]
-    outliers = np.where(cooks_d > 4 / len(X_train))[0]
-
-    print(f"Found {len(outliers)} potential outliers.")
-    if len(outliers) > 0:
-        X_train_cleaned = np.delete(X_train, outliers, axis=0)
-        y_train_cleaned = np.delete(y_train, outliers, axis=0)
-        return X_train_cleaned, y_train_cleaned
-    else:
-        return X_train, y_train
 
 def objective_rf(trial, X_train, y_train, X_val, y_val):
-    """ Objective function for tuning Random Forest """
-    n_estimators = trial.suggest_int("n_estimators", 50, 300, step=50)
-    max_depth = trial.suggest_int("max_depth", 3, 20)
-    min_samples_split = trial.suggest_int("min_samples_split", 2, 10)
-    min_samples_leaf = trial.suggest_int("min_samples_leaf", 1, 5)
-
+    """Objective function for tuning Random Forest."""
     model = RandomForestRegressor(
-        n_estimators=n_estimators,
-        max_depth=max_depth,
-        min_samples_split=min_samples_split,
-        min_samples_leaf=min_samples_leaf,
+        n_estimators=trial.suggest_int("n_estimators", 50, 300, step=50),
+        max_depth=trial.suggest_int("max_depth", 3, 20),
+        min_samples_split=trial.suggest_int("min_samples_split", 2, 10),
+        min_samples_leaf=trial.suggest_int("min_samples_leaf", 1, 5),
         random_state=42,
-        n_jobs=-1
     )
-    model.fit(X_train, y_train.ravel())
+    model.fit(X_train, y_train)
     y_pred = model.predict(X_val)
     return mean_squared_error(y_val, y_pred)
 
+
 def objective_xgb(trial, X_train, y_train, X_val, y_val):
-    """ Objective function for tuning XGBoost """
+    """Objective function for tuning XGBoost."""
     params = {
         "n_estimators": trial.suggest_int("n_estimators", 50, 300, step=50),
         "max_depth": trial.suggest_int("max_depth", 3, 15),
@@ -54,11 +53,11 @@ def objective_xgb(trial, X_train, y_train, X_val, y_val):
         "colsample_bytree": trial.suggest_uniform("colsample_bytree", 0.5, 1.0),
         "min_child_weight": trial.suggest_int("min_child_weight", 1, 10),
     }
-    
     model = XGBRegressor(objective="reg:squarederror", random_state=42, n_jobs=-1, **params)
-    model.fit(X_train, y_train.ravel())
+    model.fit(X_train, y_train)
     y_pred = model.predict(X_val)
     return mean_squared_error(y_val, y_pred)
+
 
 def hyperparameter_tuning(X_train, X_val, y_train, y_val):
     print("\n Hyperparameter Tuning in Progress...\n")
@@ -66,73 +65,96 @@ def hyperparameter_tuning(X_train, X_val, y_train, y_val):
     # Random Forest Tuning
     print("Tuning Random Forest...")
     rf_study = optuna.create_study(direction="minimize")
-    rf_study.optimize(lambda trial: objective_rf(trial, X_train, y_train, X_val, y_val), n_trials=10, show_progress_bar=True)
+    rf_study.optimize(lambda trial: objective_rf(trial, X_train, y_train, X_val, y_val), n_trials=10)
     best_rf_params = rf_study.best_params
     print(f"\nBest Random Forest Params: {best_rf_params}")
 
     # XGBoost Tuning
     print("\nTuning XGBoost...")
     xgb_study = optuna.create_study(direction="minimize")
-    xgb_study.optimize(lambda trial: objective_xgb(trial, X_train, y_train, X_val, y_val), n_trials=10, show_progress_bar=True)
+    xgb_study.optimize(lambda trial: objective_xgb(trial, X_train, y_train, X_val, y_val), n_trials=10)
     best_xgb_params = xgb_study.best_params
     print(f"\nBest XGBoost Params: {best_xgb_params}")
 
     return best_rf_params, best_xgb_params
 
-def train_and_evaluate_models(X_train, X_val, y_train, y_val, best_rf_params, best_xgb_params):
+
+def train_and_evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test):
+    """Train models with best parameters and evaluate on validation and test sets."""
     start_time = time.time()
     print("\nTraining Models...")
 
-    results = {}
-
-    models = {
-        "Random Forest": RandomForestRegressor(**best_rf_params, n_estimators=100, random_state=42, n_jobs=-1),
-        "XGBoost": XGBRegressor(**best_xgb_params, objective="reg:squarederror", n_estimators=100, random_state=42, n_jobs=-1)
+    best_rf_params = {
+        "n_estimators": 150,
+        "max_depth": 16,
+        "min_samples_split": 3,
+        "min_samples_leaf": 4,
+        "random_state": 42,
+    }
+    best_xgb_params = {
+        "n_estimators": 50,
+        "max_depth": 14,
+        "learning_rate": 0.13314778470142807,
+        "subsample": 0.6349139707904927,
+        "colsample_bytree": 0.9770790049352496,
+        "min_child_weight": 7,
+        "random_state": 42,
     }
 
-    # Train models with tqdm progress bar
+    models = {
+        "Random Forest": RandomForestRegressor(**best_rf_params),
+        "XGBoost": XGBRegressor(objective="reg:squarederror", **best_xgb_params),
+    }
+
+    results = {}
     for model_name, model in tqdm(models.items(), desc="Training Progress", unit="model"):
-        print(f"\n🔹 Training {model_name}...")
+        print(f"\n Training {model_name}...")
+
         model.fit(X_train, y_train)
-        y_pred = model.predict(X_val)
+        y_pred_val = model.predict(X_val)
+        y_pred_test = model.predict(X_test)
 
-        # Compute MSE
-        mse = mean_squared_error(y_val, y_pred)
-        results[model_name] = mse
+        metrics = {
+            "MSE": mean_squared_error(y_val, y_pred_val),
+            "MAE": mean_absolute_error(y_val, y_pred_val),
+            "R2 Score": r2_score(y_val, y_pred_val)
+        }
 
-        print(f"{model_name} MSE: {mse:.4f}")
+        test_metrics = {
+            "MSE": mean_squared_error(y_test, y_pred_test),
+            "MAE": mean_absolute_error(y_test, y_pred_test),
+            "R2 Score": r2_score(y_test, y_pred_test)
+        }
 
-    print(f"\n Total training time: {time.time() - start_time:.2f} seconds")
+        results[model_name] = {"Validation Metrics": metrics, "Test Metrics": test_metrics}
+
+        print(f"{model_name} - Validation: {metrics}")
+        print(f"{model_name} - Test: {test_metrics}")
+
+    print(f"\nTotal training time: {time.time() - start_time:.2f} seconds")
     return results
 
-# Main Function
+
 def main():
-    datadir = "DATASET/"
-    
-    X_path = datadir + "feature_vector_full.npy"
-    y_path = datadir + "y.npy"
+    datadir = "./DATASET/"
 
-    X = np.load(X_path)
-    y = np.load(y_path)
+    X = np.load(datadir + "feature_vector_full.npy")
+    y = np.load(datadir + "y.npy").reshape(-1)
 
-    # Split data into train/validation sets (use test set only after final selection)
     X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
     X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.4, random_state=42)
 
-    # Convert y_train, y_val, and y_test to 1D arrays
-    y_train = y_train.ravel()
-    y_val = y_val.ravel()
-    y_test = y_test.ravel()
+    print(f"Train Set: X={X_train.shape}, y={y_train.shape}")
+    print(f"Validation Set: X={X_val.shape}, y={y_val.shape}")
+    print(f"Test Set: X={X_test.shape}, y={y_test.shape}")
 
-    print(f"Train set shapes: X={X_train.shape}, y={y_train.shape}")
-    print(f"Validation set shapes: X={X_val.shape}, y={y_val.shape}")
-    print(f"Test set shapes: X={X_test.shape}, y={y_test.shape}")
+    train_and_evaluate_models(X_train=X_train,
+                               X_val=X_val,
+                               X_test=X_test,
+                               y_train=y_train,
+                               y_val=y_val,
+                               y_test=y_test)
 
-    # X_train_cleaned, y_train_cleaned = check_outliers(X_train, y_train)
-    best_rf_params, best_xgb_params = hyperparameter_tuning(X_train, X_val, y_train, y_val)
-
-    # Train and Evaluate Models using validation set
-    train_and_evaluate_models(X_train, X_val, y_train, y_val,best_rf_params, best_xgb_params)
 
 if __name__ == '__main__':
-    main()   
+    main()
