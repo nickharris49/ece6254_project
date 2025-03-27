@@ -16,7 +16,7 @@ def main():
 
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
-    ax.scatter(resist_5k[200100:200550], react_5k[200100:200550], y[200100:200550,0])
+    ax.scatter(resist_100k[200100:200550], react_100k[200100:200550], y[200100:200550,0])
     plt.show()
     
 
