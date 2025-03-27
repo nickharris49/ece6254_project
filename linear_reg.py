@@ -1,3 +1,36 @@
+"""
+This script explores different regression models to fit the given dataset and evaluates their performance.
+
+### Steps Taken:
+1. Linear & Polynomial Regression:
+   - Implemented both Linear Regression and Polynomial Regression (degree 2).
+   - Evaluated models using Mean Squared Error (MSE) and R² score on a validation set.
+
+2. Outlier Removal:
+   - Used Cook's Distance to identify and remove high-influence outliers.
+
+3. Feature Selection & Multicollinearity Reduction:
+   - Checked for Variance Inflation Factor (VIF) to detect multicollinearity.
+   - Found high VIF values, so Principal Component Analysis (PCA) was applied to reduce dimensions and address multicollinearity.
+
+4. Regression Assumption Checks:
+   - Scatter plots showed a non-linear relationship between features and target.
+   - Histogram of residuals was imbalanced, indicating non-normality.
+   - Residuals vs. Predicted plot showed heteroscedasticity, violating regression assumptions.
+   - QQ plot confirmed that residuals were not normally distributed.
+
+5. Feature Transformations Attempted:
+   - Applied log transformation, interaction terms, and polynomial expansion to linearize relationships.
+   - None of these transformations improved model performance.
+
+### Next Steps:
+- Since the dataset does not conform to linear regression assumptions, tree-based models will be explored next:
+  - Decision Trees
+  - XGBoost (Extreme Gradient Boosting)
+  - Potentially other ensemble methods like Random Forest.
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
@@ -6,6 +39,8 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 from statsmodels.stats.outliers_influence import variance_inflation_factor
+from sklearn.metrics import mean_squared_error, r2_score
+import time
 
 # Step 1: Outlier Detection and Removal
 def check_outliers(X_train, y_train):
@@ -36,85 +71,44 @@ def apply_pca(X):
     print(f"Explained variance by PCA components: {pca.explained_variance_ratio_}")
     return X_pca
 
-# Step 3: Scatter Plots for Linearity
-def scatter_plot_features(X_train, y_train):
-    num_features = X_train.shape[1]
-    for i in range(num_features):
-        plt.figure(figsize=(6, 4))
-        plt.scatter(X_train[:, i], y_train, alpha=0.5)
-        plt.title(f"Scatter Plot: Feature {i} vs Target")
-        plt.xlabel(f"Feature {i}")
-        plt.ylabel("Target Variable")
-        plt.show()
+# Step 3: Add Polynomial Features
+def add_polynomial_features(X_train, X_val, degree=2):
+    print(f"Applying Polynomial Regression (Degree {degree})...")
+    poly = PolynomialFeatures(degree=degree, include_bias=False)
+    X_train_poly = poly.fit_transform(X_train)
+    X_val_poly = poly.transform(X_val)  # Transform validation data using same fit
+    print(f"Polynomial features added: {X_train_poly.shape[1]} features.")
+    return X_train_poly, X_val_poly
 
-# Step 4: Add Non-Linearity
-def add_non_linear_features(X, method="degree_2"):
-    """
-    Add non-linear features to the dataset based on the specified method.
-    """
-    if method == "degree_2":
-        poly = PolynomialFeatures(degree=2, include_bias=False)
-        X_transformed = poly.fit_transform(X)
-        print("Added degree-2 polynomial features.")
-    
-    elif method == "degree_3":
-        poly = PolynomialFeatures(degree=3, include_bias=False)
-        X_transformed = poly.fit_transform(X)
-        print("Added degree-3 polynomial features.")
-    
-    elif method == "interaction":
-        poly = PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)
-        X_transformed = poly.fit_transform(X)
-        print("Added interaction terms.")
-    
-    elif method == "log":
-        # Apply logarithmic transformation (handle zero or negative values carefully)
-        if np.any(X <= 0):
-            print("Log transformation cannot be applied due to zero or negative values in features.")
-            return X  # Return original data if log cannot be applied
-        X_transformed = np.log(X)
-        print("Applied logarithmic transformation.")
-    
-    elif method == "ihs":
-        # Apply Inverse Hyperbolic Sine (IHS) transformation
-        X_transformed = np.log(X + np.sqrt(X**2 + 1))
-        print("Applied Inverse Hyperbolic Sine (IHS) transformation.")
-    
-    else:
-        raise ValueError("Invalid method specified. Choose from 'degree_2', 'degree_3', 'interaction', 'log', or 'ihs'.")
-    
-    return X_transformed
+# Step 4: Train and Evaluate Models
+def train_and_evaluate_models(X_train, X_val, y_train, y_val):
+    print("\nTraining Models...")
+    start_time = time.time()
 
-# Step 5: Recheck Linear Regression Assumptions
-def check_linear_regression_assumptions(X_train, y_train):
-    model = LinearRegression() 
-    model.fit(X_train, y_train)
+    # Linear Regression
+    lr_model = LinearRegression()
+    lr_model.fit(X_train, y_train)
+    y_pred_lr_val = lr_model.predict(X_val)
 
-    y_pred = model.predict(X_train)
-    residuals = y_train - y_pred
+    # Polynomial Regression (Degree 2)
+    X_train_poly, X_val_poly = add_polynomial_features(X_train, X_val, degree=2)
+    poly_model = LinearRegression()
+    poly_model.fit(X_train_poly, y_train)
+    y_pred_poly_val = poly_model.predict(X_val_poly)
 
-    # Histogram of residuals (Normality Check)
-    plt.figure(figsize=(6, 4))
-    plt.hist(residuals, bins=20, edgecolor='k')
-    plt.title("Histogram of Residuals")
-    plt.xlabel("Residual")
-    plt.ylabel("Frequency")
-    plt.show()
+    # Evaluate models
+    mse_lr = mean_squared_error(y_val, y_pred_lr_val)
+    r2_lr = r2_score(y_val, y_pred_lr_val)
 
-    # Residuals vs Predicted (Homoscedasticity Check)
-    plt.figure(figsize=(6, 4))
-    plt.scatter(y_pred, residuals, alpha=0.5)
-    plt.axhline(y=0, color='r', linestyle='--')
-    plt.title("Residuals vs Predicted")
-    plt.xlabel("Predicted")
-    plt.ylabel("Residual")
-    plt.show()
+    mse_poly = mean_squared_error(y_val, y_pred_poly_val)
+    r2_poly = r2_score(y_val, y_pred_poly_val)
 
-    # QQ Plot (Normality Check)
-    sm.qqplot(residuals, line='45', fit=True)
-    plt.title("QQ Plot of Residuals")
-    plt.show()
+    print("\n--- Model Performance ---")
+    print(f"Linear Regression:      MSE={mse_lr:.4f},   R²={r2_lr:.4f}")    
+    print(f"Polynomial Regression:  MSE={mse_poly:.4f}, R²={r2_poly:.4f}")
+    print(f"Total training time: {time.time() - start_time:.2f} seconds")
 
+# Main Function
 def main():
     datadir = "DATASET/"
     
@@ -124,20 +118,24 @@ def main():
     X = np.load(X_path)
     y = np.load(y_path)
 
-    # Split data into train/test sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Split data into train/validation sets (use test set only after final selection)
+    X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.4, random_state=42)
 
-    # Print shapes of train and test sets
+    # Convert y_train, y_val, and y_test to 1D arrays
+    y_train = y_train.ravel()
+    y_val = y_val.ravel()
+    y_test = y_test.ravel()
+
     print(f"Train set shapes: X={X_train.shape}, y={y_train.shape}")
+    print(f"Validation set shapes: X={X_val.shape}, y={y_val.shape}")
     print(f"Test set shapes: X={X_test.shape}, y={y_test.shape}")
 
-    # Step 1: Remove Outliers
+    # Step 1: Remove Outliers from training set
     X_train_cleaned, y_train_cleaned = check_outliers(X_train, y_train)
-    print(f"Train set shapes: X={X_train_cleaned.shape}, y={y_train_cleaned.shape}")
 
     # Step 2: Check VIF and Apply PCA if Necessary
     vif_vals_before = check_vif(X_train_cleaned)
-    
     if any(vif > 10 for vif in vif_vals_before):
         print("High VIF detected. Applying PCA...")
         X_transformed = apply_pca(X_train_cleaned)
@@ -146,18 +144,11 @@ def main():
         X_final = X_transformed
     else:
         X_final = X_train_cleaned
-    
-    print(f"Train set shapes: X={X_final.shape}, y={y_train.shape}")
 
-    # Step 3: Scatter Plots for Linearity
-    # scatter_plot_features(X_final, y_train_cleaned)
+    print(f"Train set shapes after transformation: X={X_final.shape}, y={y_train_cleaned.shape}")
 
-    # Step 4: Add Non-Linearity
-    X_poly = add_non_linear_features(X_final, method="ihs")
-
-    # Step 5: Recheck Linear Regression Assumptions
-    scatter_plot_features(X_poly, y_train_cleaned)
-    # check_linear_regression_assumptions(X_poly, y_train_cleaned)
+    # Step 3: Train and Evaluate Models using validation set
+    train_and_evaluate_models(X_final, X_val, y_train_cleaned, y_val)
 
 if __name__ == '__main__':
     main()
