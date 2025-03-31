@@ -8,7 +8,7 @@ This script trains two regression models (Random Forest and XGBoost).
 5. Evaluates the models on validation and test sets, showing the following metrics:
    - Mean Squared Error (MSE)
    - Mean Absolute Error (MAE)
-   - R2 Score (how well the model fits the data)
+   - R2 Score
 
 ### Dependencies:
 - `numpy`
@@ -125,6 +125,12 @@ def train_and_evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test):
             "MAE": mean_absolute_error(y_test, y_pred_test),
             "R2 Score": r2_score(y_test, y_pred_test),
         }
+
+        # Save predictions
+        if model_name == "Random Forest":
+            np.save("rf_pred.npy", y_pred_test)
+        elif model_name == "XGBoost":
+            np.save("xgboost_pred.npy", y_pred_test)
 
         results[model_name] = {"Validation Metrics": metrics, "Test Metrics": test_metrics}
 
