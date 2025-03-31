@@ -33,7 +33,9 @@ This script explores different regression models to fit the given dataset and ev
 
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 import statsmodels.api as sm
+from scipy.stats import probplot
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.decomposition import PCA
@@ -41,6 +43,33 @@ from sklearn.model_selection import train_test_split
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sklearn.metrics import mean_squared_error, r2_score
 import time
+
+def plot_residuals(y_true, y_pred):
+    residuals = y_true - y_pred
+    
+    plt.figure(figsize=(15, 5))
+    
+    # Histogram of residuals
+    plt.subplot(1, 3, 1)
+    sns.histplot(residuals, kde=True, bins=20)
+    plt.title("Histogram of Residuals")
+    plt.xlabel("Residuals")
+    
+    # Residuals vs. Predicted Values
+    plt.subplot(1, 3, 2)
+    plt.scatter(y_pred, residuals, alpha=0.5)
+    plt.axhline(y=0, color='r', linestyle='--')
+    plt.title("Residuals vs. Predicted Values")
+    plt.xlabel("Predicted Values")
+    plt.ylabel("Residuals")
+    
+    # QQ Plot
+    plt.subplot(1, 3, 3)
+    probplot(residuals, dist="norm", plot=plt)
+    plt.title("QQ Plot of Residuals")
+    
+    plt.tight_layout()
+    plt.show()
 
 # Step 1: Outlier Detection and Removal
 def check_outliers(X_train, y_train):
@@ -90,30 +119,42 @@ def train_and_evaluate_models(X_train, X_val, y_train, y_val):
     lr_model.fit(X_train, y_train)
     y_pred_lr_val = lr_model.predict(X_val)
 
-    # Polynomial Regression (Degree 2)
-    X_train_poly, X_val_poly = add_polynomial_features(X_train, X_val, degree=2)
-    poly_model = LinearRegression()
-    poly_model.fit(X_train_poly, y_train)
-    y_pred_poly_val = poly_model.predict(X_val_poly)
-
     # Evaluate models
     mse_lr = mean_squared_error(y_val, y_pred_lr_val)
     r2_lr = r2_score(y_val, y_pred_lr_val)
 
-    mse_poly = mean_squared_error(y_val, y_pred_poly_val)
-    r2_poly = r2_score(y_val, y_pred_poly_val)
-
     print("\n--- Model Performance ---")
     print(f"Linear Regression:      MSE={mse_lr:.4f},   R²={r2_lr:.4f}")    
-    print(f"Polynomial Regression:  MSE={mse_poly:.4f}, R²={r2_poly:.4f}")
     print(f"Total training time: {time.time() - start_time:.2f} seconds")
+
+    y_pred = lr_model.predict(X_val)
+    plot_residuals(y_val, y_pred)
+
+def plot_feature_vs_target(X, y, feature_names=None):
+    num_features = X.shape[1]
+    plt.figure(figsize=(15, 5 * (num_features // 3 + 1)))
+
+    for i in range(num_features):
+        plt.subplot((num_features // 3) + 1, 3, i + 1)
+        plt.scatter(X[:, i], y, alpha=0.5)
+        plt.xlabel(f"Feature {i}" if feature_names is None else feature_names[i])
+        plt.ylabel("Target")
+        plt.title(f"Feature {i} vs Target")
+
+    plt.tight_layout()
+    plt.show()
+
+def check_feature_correlation(X, y, feature_names=None):
+    correlations = np.corrcoef(X.T, y)[-1, :-1]  # Compute correlation with target
+    for i, corr in enumerate(correlations):
+        print(f"Feature {i}: Correlation with target = {corr:.3f}")
 
 # Main Function
 def main():
     datadir = "DATASET/"
     
-    X_path = datadir + "feature_vector_full.npy"
-    y_path = datadir + "y.npy"
+    X_path = datadir + "feature_vector_full_normalized.npy"
+    y_path = datadir + "y_normalized.npy"
 
     X = np.load(X_path)
     y = np.load(y_path)
@@ -131,6 +172,8 @@ def main():
     print(f"Validation set shapes: X={X_val.shape}, y={y_val.shape}")
     print(f"Test set shapes: X={X_test.shape}, y={y_test.shape}")
 
+    check_feature_correlation(X_train, y_train)
+
     # Step 1: Remove Outliers from training set
     X_train_cleaned, y_train_cleaned = check_outliers(X_train, y_train)
 
@@ -144,8 +187,8 @@ def main():
         X_final = X_transformed
     else:
         X_final = X_train_cleaned
-
-    print(f"Train set shapes after transformation: X={X_final.shape}, y={y_train_cleaned.shape}")
+    
+    plot_feature_vs_target(X_final, y_train_cleaned)
 
     # Step 3: Train and Evaluate Models using validation set
     train_and_evaluate_models(X_final, X_val, y_train_cleaned, y_val)

@@ -8,7 +8,7 @@ This script trains two regression models (Random Forest and XGBoost).
 5. Evaluates the models on validation and test sets, showing the following metrics:
    - Mean Squared Error (MSE)
    - Mean Absolute Error (MAE)
-   - R2 Score (how well the model fits the data)
+   - R2 Score
 
 ### Dependencies:
 - `numpy`
@@ -117,14 +117,20 @@ def train_and_evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test):
         metrics = {
             "MSE": mean_squared_error(y_val, y_pred_val),
             "MAE": mean_absolute_error(y_val, y_pred_val),
-            "R2 Score": r2_score(y_val, y_pred_val)
+            "R2 Score": r2_score(y_val, y_pred_val),
         }
 
         test_metrics = {
             "MSE": mean_squared_error(y_test, y_pred_test),
             "MAE": mean_absolute_error(y_test, y_pred_test),
-            "R2 Score": r2_score(y_test, y_pred_test)
+            "R2 Score": r2_score(y_test, y_pred_test),
         }
+
+        # Save predictions
+        if model_name == "Random Forest":
+            np.save("rf_pred.npy", y_pred_test)
+        elif model_name == "XGBoost":
+            np.save("xgboost_pred.npy", y_pred_test)
 
         results[model_name] = {"Validation Metrics": metrics, "Test Metrics": test_metrics}
 
@@ -138,8 +144,8 @@ def train_and_evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test):
 def main():
     datadir = "./DATASET/"
 
-    X = np.load(datadir + "feature_vector_full.npy")
-    y = np.load(datadir + "y.npy").reshape(-1)
+    X = np.load(datadir + "feature_vector_full_normalized.npy")
+    y = np.load(datadir + "y_normalized.npy").reshape(-1)
 
     X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
     X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.4, random_state=42)
