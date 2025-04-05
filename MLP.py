@@ -10,15 +10,44 @@ from sklearn.metrics import mean_squared_error, r2_score
 def main():
     datadir = "./DATASET/"
 
-    X = np.load(datadir + "feature_vector_full_normalized.npy") # 5k and 100k not normalized
-    y = np.load(datadir + "y_normalized.npy").reshape(-1)
-    # just pushed a normalized version of the data, just subtracted the mean and divided 
-    # by standard deviation for each 60s window to get the bioimpedance and angle data a little bit more similar across subjects
-    # up to y'all whether you want to use the unnormalized or normalized data, but they're both there
+    # # To run on stratified list of all subjects
+    # List of subjects
+    subjects = [1, 2, 3, 5, 6, 7, 8, 11]  # Add all subject IDs here
 
-    # test_size=0.2, random_state=42
-    X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
-    X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.4, random_state=42)
+    # Initialize lists to hold data and labels
+    X_list = []
+    y_list = []
+    subject_list = []
+
+    # Load data for each subject
+    for subject in subjects:
+        X_subject = np.load(datadir + f"feature_vector_full_normalized_{subject}.npy")
+        y_subject = np.load(datadir + f"y_normalized_{subject}.npy").reshape(-1)
+        
+        X_list.append(X_subject)
+        y_list.append(y_subject)
+        subject_list.extend([subject] * len(y_subject))
+
+    # Combine data from all subjects
+    X = np.concatenate(X_list, axis=0)
+    y = np.concatenate(y_list, axis=0)
+    subjects_array = np.array(subject_list)
+
+    # Split the data using stratified sampling based on subject IDs
+    X_train, X_temp, y_train, y_temp, subjects_train, subjects_temp = train_test_split(
+        X, y, subjects_array, test_size=0.2, random_state=42, stratify=subjects_array
+    )
+
+    X_val, X_test, y_val, y_test, subjects_val, subjects_test = train_test_split(
+        X_temp, y_temp, subjects_temp, test_size=0.4, random_state=42, stratify=subjects_temp
+    )
+
+    # # for reading in just 1 subject file:
+    # X = np.load(datadir + "feature_vector_full_normalized.npy") # 5k and 100k not normalized
+    # y = np.load(datadir + "y_normalized.npy").reshape(-1)
+    # # just pushed a normalized version of the data, just subtracted the mean and divided 
+    # # by standard deviation for each 60s window to get the bioimpedance and angle data a little bit more similar across subjects
+    # # up to y'all whether you want to use the unnormalized or normalized data, but they're both there
 
     print(f"Train Set: X={X_train.shape}, y={y_train.shape}")
     print(f"Validation Set: X={X_val.shape}, y={y_val.shape}")
