@@ -57,7 +57,7 @@ def main():
                 clean_inds = get_clean_inds(subject, bioz_to_include='kn', exo=False)
                 mech_vals = get_biomech_from_subject(subject, clean_inds, exo=False)
 
-                ankle_bioz = get_bioz_from_subject(subject, clean_inds, ak_or_kn=True, exo=False)
+                #ankle_bioz = get_bioz_from_subject(subject, clean_inds, ak_or_kn=True, exo=False)
                 knee_bioz = get_bioz_from_subject(subject, clean_inds, ak_or_kn=False, exo=False)
                 recarray = np.ones(np.shape(np.squeeze(mech_vals[0])), dtype=dtype)
 
@@ -66,8 +66,8 @@ def main():
                     recarray[mech_keys[i]] = np.squeeze(mech_val)
 
                 # populate record array with ankle bioimpedance values
-                for i, bioz_val in enumerate(ankle_bioz):
-                    recarray[ankle_bioz_keys[i]] = bioz_val
+                # for i, bioz_val in enumerate(ankle_bioz):
+                #     recarray[ankle_bioz_keys[i]] = bioz_val
                 
                 # populate record array with knee bioimpedance values
                 for i, bioz_val in enumerate(knee_bioz):

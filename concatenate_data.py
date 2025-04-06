@@ -33,7 +33,7 @@ def main():
             x5k.append(window['knee_bioz_5k_reactance'])
             r100k.append(window['knee_bioz_100k_resistance'])
             x100k.append(window['knee_bioz_100k_reactance'])
-            
+        
         y = np.expand_dims(np.concatenate(y, axis=0), axis=1)
         r5k = np.expand_dims(np.concatenate(r5k, axis=0), axis=1)
         x5k = np.expand_dims(np.concatenate(x5k, axis=0), axis=1)
