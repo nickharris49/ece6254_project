@@ -12,7 +12,7 @@ def generate_lstm_windows(window_size=50,
     if os.getlogin() == 'nicholasharris':
         base_path = '/Users/nicholasharris/OneDrive - Georgia Institute of Technology/BioZ Dataset'
 
-    full_path = base_path + '/nicks_reworked_dataset/'
+    full_path = '../DATASET/'
     
     # get all the data file names
     # data_files = os.listdir(full_path)
@@ -38,8 +38,6 @@ def generate_lstm_windows(window_size=50,
     x_input = np.stack(x_input, axis=2)
     x_input = (x_input - np.mean(x_input, axis = (0,1))) / np.std(x_input, axis=(0,1))
     
-    x_input = x_input[:,::2,:]
-    y_output = y_output[:,::2]
 
     x_train, x_test, y_train, y_test = train_test_split(x_input, y_output, test_size=0.25, random_state=42)
 
