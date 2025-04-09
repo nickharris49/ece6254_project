@@ -70,7 +70,7 @@ def get_clean_inds(subject: int, exo=False, ak_or_kn=False, bioz_to_include='bot
             if (i >= len(walking_data) or np.shape(walking_data[i].BioZ1.Data[0])[0] == 0) and i + 1 in clean_inds:
                 clean_inds.remove(i+1)
                 print("MISSING BIOZ DATA FROM SUBJECT " + str(subject) + " AT TRIAL " + str(i+1) + ". " + ("EXO" if exo else "NO EXO"))
-        
+
     ## BIOIMPEDANCE INDEX CHECKING (KNEE)
     if bioz_to_include == 'both' or bioz_to_include == 'kn':
         bioz_path = base_path + '/bioimpedance/s' + str(subject) + '_' + 'kn' + '_' + exo_path + '.obj'

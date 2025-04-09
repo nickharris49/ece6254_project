@@ -128,7 +128,13 @@ if __name__ == "__main__":
 
     features = ['knee_bioz_5k_resistance', 'knee_bioz_5k_reactance', 'knee_bioz_100k_resistance', 'knee_bioz_100k_reactance']
     output_feature = "knee_angle_l"
-    subject = "11"
+    subject = "11"    
+    
+    features = ['ankle_bioz_5k_resistance', 'ankle_bioz_5k_reactance', 'ankle_bioz_100k_resistance', 'ankle_bioz_100k_reactance']
+    output_feature = "ankle_angle_l"
+    subjects = ['3', '4', '5', '6', '7', '8', '11']
+        #subjects_ankle_base = [3, 4, 5, 6, 7, 8, 11]
+
 
     print("feature vector")
     print(features)
@@ -137,7 +143,11 @@ if __name__ == "__main__":
     print("subject")
     print(subject)
 
-    train_x, test_x, train_y, test_y = generate_lstm_windows(WINDOW_SIZE, features, output_feature, subject)
+    print("subjects")
+    print(subjects)
+
+    #train_x, test_x, train_y, test_y = generate_lstm_windows(WINDOW_SIZE, features, output_feature, subject)
+    train_x, test_x, train_y, test_y = generate_lstm_windows_multiple_subs(WINDOW_SIZE, features, output_feature, subjects)
 
     # conversion to torch and transferring data to GPU
     shape = train_x.shape
@@ -177,4 +187,4 @@ if __name__ == "__main__":
     else:
         print('No GPU available, training on CPU; consider making n_epochs very small.')
     # run training function
-    train(net, trainloader, testloader, epochs=400, batch_size=64, lr=0.001)
+    train(net, trainloader, testloader, epochs=200, batch_size=64, lr=0.001)
