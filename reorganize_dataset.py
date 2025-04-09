@@ -42,39 +42,39 @@ def main():
     for joint in ['knee', 'ankle']:
         for exo in ['exo', 'base']:
             dtype = []
-            for key in knee_bioz_keys:
+            for key in ankle_bioz_keys:
                 dtype.append((key, 'f8'))
 
             for key in mech_keys:
                 dtype.append((key, 'f8'))
-            for subject in subjects_knee_base:
+            for subject in subjects_ankle_base:
                 save_path = base_path + '/nicks_reworked_dataset/knee_base_' + str(subject) + '.npy'
                 if 'knee_base_' + str(subject) in os.listdir(base_path + '/nicks_reworked_dataset/'):
                     continue
 
                 # get the indices of data (60sec windows) which are NOT missing across all data types
                 # e.g. if window number 10 is missing in any of the biomech recording, the ankle bioz, or the knee bioz, it will NOT be included
-                clean_inds = get_clean_inds(subject, bioz_to_include='kn', exo=False)
+                clean_inds = get_clean_inds(subject, bioz_to_include='ak', exo=False)
                 mech_vals = get_biomech_from_subject(subject, clean_inds, exo=False)
 
-                #ankle_bioz = get_bioz_from_subject(subject, clean_inds, ak_or_kn=True, exo=False)
-                knee_bioz = get_bioz_from_subject(subject, clean_inds, ak_or_kn=False, exo=False)
+                ankle_bioz = get_bioz_from_subject(subject, clean_inds, ak_or_kn=True, exo=False)
+                #knee_bioz = get_bioz_from_subject(subject, clean_inds, ak_or_kn=False, exo=False)
                 recarray = np.ones(np.shape(np.squeeze(mech_vals[0])), dtype=dtype)
 
                 # populate record array with joint angles
                 for i, mech_val in enumerate(mech_vals):
                     recarray[mech_keys[i]] = np.squeeze(mech_val)
 
-                # populate record array with ankle bioimpedance values
-                # for i, bioz_val in enumerate(ankle_bioz):
-                #     recarray[ankle_bioz_keys[i]] = bioz_val
+                #populate record array with ankle bioimpedance values
+                for i, bioz_val in enumerate(ankle_bioz):
+                    recarray[ankle_bioz_keys[i]] = bioz_val
                 
-                # populate record array with knee bioimpedance values
-                for i, bioz_val in enumerate(knee_bioz):
-                    recarray[knee_bioz_keys[i]] = bioz_val
+                # # populate record array with knee bioimpedance values
+                # for i, bioz_val in enumerate(knee_bioz):
+                #     recarray[knee_bioz_keys[i]] = bioz_val
                 
                 # save the new data
-                save_path = base_path + '/nicks_reworked_dataset/knee_base_' + str(subject) + '.npy'
+                save_path = base_path + '/nicks_reworked_dataset/ankle_base_' + str(subject) + '.npy'
                 np.save(save_path, recarray)
 
 

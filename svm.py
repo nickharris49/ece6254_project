@@ -13,8 +13,8 @@ def main():
     datadir = "DATASET/"
     datafiles = os.listdir(datadir)
     
-    X_path = datadir + "feature_vector_100k_normalized_1.npy" # change this to change the input feature vector
-    y_path = datadir + "y_normalized_1.npy"
+    X_path = datadir + "ankle_feature_vector_100k_11.npy" # change this to change the input feature vector
+    y_path = datadir + "ankle_y_11.npy"
 
     # load in data
     X = np.load(X_path)
@@ -23,21 +23,21 @@ def main():
     y = np.load(y_path)
 
     # split into train, val, and test set
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.4, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, shuffle=False)
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.4, random_state=42, shuffle=False)
     y_train = y_train.squeeze()
     y_val = y_val.squeeze()
     y_test = y_test.squeeze()
 
-    features = ["r5k", "x5k", "r100k", "x100k"]
-    fig, axs = plt.subplots(nrows=np.shape(X)[1]+1)
-    for i in range(len(axs) -  1):
-        axs[i].plot(X[:1000,i])
-        axs[i].set_ylabel(features[i])
+    # features = ["r5k", "x5k", "r100k", "x100k"]
+    # fig, axs = plt.subplots(nrows=np.shape(X)[1]+1)
+    # for i in range(len(axs) -  1):
+    #     axs[i].plot(X[:1000,i])
+    #     axs[i].set_ylabel(features[i])
 
-    axs[np.shape(X)[1]].plot(y[:1000])
-    axs[np.shape(X)[1]].set_ylabel("knee angle")
-    #plt.show(block=True)
+    # axs[np.shape(X)[1]].plot(y[:1000])
+    # axs[np.shape(X)[1]].set_ylabel("knee angle")
+    # plt.show(block=True)
     
     # README
     # Linear regressor seems to be pretty not uh, good -> 0.0035415044310641575
@@ -49,6 +49,12 @@ def main():
     pred = reg.predict(X_val)
     score = reg.score(X_val, y_val)
     print(score)
+
+    y_pred = reg.predict(X_test)
+
+    plt.plot(y_test)
+    plt.plot(y_pred)
+    plt.show(block=True)
 
     # Linear SVR
     # pretty weird, negative score now -> -0.03359
@@ -99,6 +105,11 @@ def main():
     score_rbf = svr_rbf.score(X_val[:1000], y_val[:1000])
 
     print(score_rbf)
+
+    y_pred = svr_rbf.predict(X_test)
+    plt.plot(y_test)
+    plt.plot(y_pred)
+    plt.show(block=True)
 
     ## model too simple for the data I fear
 
