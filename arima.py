@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 def load_subject_series_arima(subject_id, base_dir="./DATASET/"):
     y_path_raw = os.path.join(base_dir, f"ankle_y_{subject_id}.npy")
@@ -81,16 +81,18 @@ def run_arima_forecast(subject_id, forecast_horizon=300, arima_order=(3, 0, 2), 
 
     plot_forecast(subject_id, "ARIMA", x_train_tail, y_train_tail, x_forecast, y_test_unnorm, forecast_unnorm, results_dir)
 
-    mse = mean_squared_error(y_test_unnorm, forecast_unnorm)
+    mse = mean_squared_error(y_test, forecast_norm)
     rmse = np.sqrt(mse)
-    mae = mean_absolute_error(y_test_unnorm, forecast_unnorm)
+    mae = mean_absolute_error(y_test, forecast_norm)
+    r2 = r2_score(y_test, forecast_norm)
 
     print(f"\nARIMA Metrics for Subject {subject_id}")
     print(f"Test MSE:  {mse:.3f}")
     print(f"Test RMSE: {rmse:.3f}")
     print(f"Test MAE:  {mae:.3f}")
+    print(f"Test R2:  {r2:.3f}")
 
-    return {"Subject": subject_id, "Model": "ARIMA", "Test MSE": mse, "Test RMSE": rmse, "Test MAE": mae}
+    return {"Subject": subject_id, "Model": "ARIMA", "Test MSE": mse, "Test RMSE": rmse, "Test MAE": mae, "Test R2": r2}
 
 def run_sarima_rolling_forecast(subject_id, forecast_horizon=300, context_points=200, m=25, results_dir="results/arima"):
     data = load_subject_series_arima(subject_id)
@@ -131,16 +133,18 @@ def run_sarima_rolling_forecast(subject_id, forecast_horizon=300, context_points
 
     plot_forecast(subject_id, "SARIMA", x_train_tail, y_train_tail, x_forecast, y_test_unnorm, forecast_unnorm, results_dir)
 
-    mse = mean_squared_error(y_test_unnorm, forecast_unnorm)
+    mse = mean_squared_error(y_test, predictions_norm)
     rmse = np.sqrt(mse)
-    mae = mean_absolute_error(y_test_unnorm, forecast_unnorm)
+    mae = mean_absolute_error(y_test, predictions_norm)
+    r2 = r2_score(y_test, predictions_norm)
 
     print(f"\nSARIMA Metrics for Subject {subject_id}")
     print(f"Test MSE:  {mse:.3f}")
     print(f"Test RMSE: {rmse:.3f}")
     print(f"Test MAE:  {mae:.3f}")
-
-    return {"Subject": subject_id, "Model": "SARIMA", "Test MSE": mse, "Test RMSE": rmse, "Test MAE": mae}
+    print(f"Test R2:  {r2:.3f}")
+    
+    return {"Subject": subject_id, "Model": "SARIMA", "Test MSE": mse, "Test RMSE": rmse, "Test MAE": mae, "Test R2": r2}
 
 def main():
     subjects = [1, 3, 4, 5, 6, 7, 8, 11]

@@ -47,25 +47,35 @@ import os
 def unnormalize(y_norm, mean, std):
     return y_norm * std + mean
 
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+import numpy as np
+import matplotlib.pyplot as plt
+
 def plot_predictions(y_test, y_pred, mean_y, std_y, label="Model", max_points=500, save_path=None):
+    # Unnormalize for visualization
     y_pred_unnorm = unnormalize(y_pred, mean_y, std_y)
     y_test_unnorm = unnormalize(y_test, mean_y, std_y)
-
-    mse = mean_squared_error(y_test_unnorm, y_pred_unnorm)
+    
+    # Metrics computed on normalized values
+    mse = mean_squared_error(y_test, y_pred)
     rmse = np.sqrt(mse)
-    mae = mean_absolute_error(y_test_unnorm, y_pred_unnorm)
+    mae = mean_absolute_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
 
-    print(f"\n{label} Test Metrics:")
+    print(f"\n{label} Test Metrics (Normalized):")
     print(f"Test MSE:  {mse:.3f}")
     print(f"Test RMSE: {rmse:.3f}")
     print(f"Test MAE:  {mae:.3f}")
+    print(f"Test R²:   {r2:.3f}")
 
+    # Limit number of points for plotting
     slice_test = slice(-max_points, None)
     y_test_tail = y_test_unnorm[slice_test]
     y_pred_tail = y_pred_unnorm[slice_test]
 
+    # Combined plot
     plt.figure(figsize=(12, 5))
-    plt.plot(range(len(y_test_tail)), y_test_tail, label="Test (actual)", color='blue', alpha=0.6)
+    plt.plot(range(len(y_test_tail)), y_test_tail, label="Test (Actual)", color='blue', alpha=0.6)
     plt.plot(range(len(y_pred_tail)), y_pred_tail, label=f"{label} Prediction", color='orange', linewidth=2)
     plt.title(f"{label} - Prediction vs Actual")
     plt.xlabel("Sample Index")
@@ -77,6 +87,7 @@ def plot_predictions(y_test, y_pred, mean_y, std_y, label="Model", max_points=50
         plt.savefig(save_path + "_combined.png")
     plt.close()
 
+    # Split plot
     fig, axs = plt.subplots(2, 1, figsize=(12, 6), sharex=True)
     axs[0].plot(range(len(y_test_tail)), y_test_tail, label="Test (Actual)", color='blue')
     axs[0].set_title("Ground Truth (Test Set)")
@@ -94,7 +105,7 @@ def plot_predictions(y_test, y_pred, mean_y, std_y, label="Model", max_points=50
         plt.savefig(save_path + "_split.png")
     plt.close()
 
-    return mse, rmse, mae
+    return mse, rmse, mae, r2
 
 def main():
     subjects = [1, 3, 4, 5, 6, 7, 8, 11]
@@ -124,7 +135,7 @@ def main():
         model.fit(X_train, y_train)
         y_pred_test = model.predict(X_test)
 
-        mse, rmse, mae = plot_predictions(
+        mse, rmse, mae, r2 = plot_predictions(
             y_test=y_test,
             y_pred=y_pred_test,
             mean_y=mean_y,
@@ -138,7 +149,8 @@ def main():
             "Model": "Linear Regression",
             "Test MSE": mse,
             "Test RMSE": rmse,
-            "Test MAE": mae
+            "Test MAE": mae,
+            "Test R2": r2
         })
 
     df_results = pd.DataFrame(all_results)

@@ -55,18 +55,19 @@ def unnormalize(y_norm, mean, std):
     return y_norm * std + mean
 
 def plot_predictions(y_test, y_pred, mean_y, std_y, label="Model", max_points=100, save_path=None):
-    y_pred_unnorm = unnormalize(y_pred, mean_y, std_y)
-    y_test_unnorm = unnormalize(y_test, mean_y, std_y)
-
-    mse = mean_squared_error(y_test_unnorm, y_pred_unnorm)
+    mse = mean_squared_error(y_test, y_pred)
     rmse = np.sqrt(mse)
-    mae = mean_absolute_error(y_test_unnorm, y_pred_unnorm)
+    mae = mean_absolute_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
 
     print(f"\n{label} Test Metrics:")
     print(f"Test MSE:  {mse:.3f}")
     print(f"Test RMSE: {rmse:.3f}")
     print(f"Test MAE:  {mae:.3f}")
+    print(f"Test R²:   {r2:.3f}")
 
+    y_pred_unnorm = unnormalize(y_pred, mean_y, std_y)
+    y_test_unnorm = unnormalize(y_test, mean_y, std_y)
     slice_test = slice(-max_points, None)
     y_test_tail = y_test_unnorm[slice_test]
     y_pred_tail = y_pred_unnorm[slice_test]
@@ -101,7 +102,7 @@ def plot_predictions(y_test, y_pred, mean_y, std_y, label="Model", max_points=10
         plt.savefig(save_path + "_split.png")
     plt.close()
 
-    return mse, rmse, mae
+    return mse, rmse, mae, r2
 
 def train_and_evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, mean_y, std_y, subject_id, results_dir):
     start_time = time.time()
@@ -136,7 +137,7 @@ def train_and_evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, me
         y_pred_val = model.predict(X_val)
         y_pred_test = model.predict(X_test)
 
-        mse, rmse, mae = plot_predictions(
+        mse, rmse, mae, r2 = plot_predictions(
             y_test, y_pred_test, mean_y, std_y,
             label=f"{model_name} - Subject {subject_id}",
             save_path=os.path.join(results_dir, "plots", f"{model_name.lower().replace(' ', '_')}_subject_{subject_id}")
@@ -147,7 +148,8 @@ def train_and_evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, me
             "Model": model_name,
             "Test MSE": mse,
             "Test RMSE": rmse,
-            "Test MAE": mae
+            "Test MAE": mae,
+            "Test R2": r2
         })
 
         print(f"{model_name} - Total training time: {time.time() - start_time:.2f} seconds")
