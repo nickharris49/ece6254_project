@@ -1,11 +1,11 @@
 import numpy as np
 
 
-def load_subject_data(subjects, datadir="./DATASET/"):
+def load_subject_data(subjects, datadir):
     X_all, y_all = [], []
     for subject in subjects:
-        X = np.load(f"{datadir}/feature_vector_full_normalized_{subject}.npy")  # (N, 4)
-        y = np.load(f"{datadir}/y_normalized_{subject}.npy").reshape(-1)  # (N,)
+        X = np.load(f"{datadir}/ankle_feature_vector_full_normalized_{subject}.npy")  # (N, 4)
+        y = np.load(f"{datadir}/ankle_y_normalized_{subject}.npy").reshape(-1)  # (N,)
         X_all.append(X)
         y_all.append(y)
     return np.vstack(X_all), np.concatenate(y_all)
@@ -23,9 +23,9 @@ def create_windows(X, y, window_size=100, stride=10):
 datadir = "./DATASET/"
 window_size = 100
 stride = 10
-subjects = [1, 2, 3, 5, 6, 7, 8, 11]
+subjects = [1, 3, 4, 5, 6, 7, 8, 11]
 
-train_subjects = [1, 2, 3, 5, 6]
+train_subjects = [1, 3, 4, 5, 6]
 val_subjects = [7, 8]
 test_subjects = [11]
 

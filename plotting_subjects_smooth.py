@@ -4,18 +4,15 @@ import os
 import matplotlib.ticker as ticker
 import pandas as pd
 
-"""
-Plots the time-series of all four bioimpedance signals and the knee angle
-for each subject listed in subject_ids.
 
-Applies smoothing to the 100k Reactance channel (index 3) to reduce noise.
-"""
-
-
-def smooth_100k_reactance(X):
-    df = pd.DataFrame(X.T)
-    df.iloc[:, 3] = df.iloc[:, 3].rolling(window=15, center=True, min_periods=1).mean()
-    return df.to_numpy().T
+def smoother(X):
+    df = pd.DataFrame(X)
+    df.iloc[:, 0] = df.iloc[:, 0].rolling(window=5, center=True, min_periods=1).mean()
+    df.iloc[:, 1] = df.iloc[:, 1].rolling(window=5, center=True, min_periods=1).mean()
+    df.iloc[:, 2] = df.iloc[:, 2].rolling(window=5, center=True, min_periods=1).mean()
+    df.iloc[:, 3] = df.iloc[:, 3].rolling(window=5, center=True, min_periods=1).mean()
+    X = df.to_numpy()
+    return df.to_numpy()
 
 
 def plot_normalized_subject_time_series_with_smoothing(
@@ -26,7 +23,7 @@ def plot_normalized_subject_time_series_with_smoothing(
     duration_sec,
     stride,
     root_dir="SUBJECT_FEATURE_PLOTS",
-    subfolder="Normalized_Smoothed100k",
+    subfolder="Normalized Ankle Smoothed",
 ):
     save_dir = os.path.join(root_dir, subfolder)
     os.makedirs(save_dir, exist_ok=True)
@@ -40,10 +37,14 @@ def plot_normalized_subject_time_series_with_smoothing(
 
     for subject in subject_ids:
         try:
-            X = np.load(os.path.join(datadir, f"feature_vector_full_normalized_{subject}.npy")).T
-            y = np.load(os.path.join(datadir, f"y_normalized_{subject}.npy")).reshape(-1)
+            X = np.load(os.path.join(datadir, f"ankle_feature_vector_full_{subject}.npy")).T
+            y = np.load(os.path.join(datadir, f"ankle_y_{subject}.npy")).reshape(-1)
+            original_std = np.std(X[:, 3])  # for example, 100k Reactance
 
-            X = smooth_100k_reactance(X)
+            X = smoother(X.copy())
+            smoothed_std = np.std(X[:, 3])
+            print(f"Original STD: {original_std:.4f}")
+            print(f"Smoothed STD: {smoothed_std:.4f}")
 
             # Downsampling
             fs_down = fs / stride
@@ -86,10 +87,10 @@ def plot_normalized_subject_time_series_with_smoothing(
 
 def main():
     datadir = "./DATASET/"
-    subject_ids = [1, 2, 3, 5, 6, 7, 8, 11]
+    subject_ids = [1, 3, 4, 5, 6, 7, 8, 11]
     fs = 100
     start_time_sec = 100
-    duration_sec = 1
+    duration_sec = 2
     stride = 1
 
     plot_normalized_subject_time_series_with_smoothing(datadir, subject_ids, fs, start_time_sec, duration_sec, stride)

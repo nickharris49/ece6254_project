@@ -18,7 +18,7 @@ def plot_subject_time_series(
     duration_sec,
     stride,
     root_dir="SUBJECT_FEATURE_PLOTS",
-    subfolder="Unnormalized",
+    subfolder="Unnormalized Ankle",
 ):
     save_dir = os.path.join(root_dir, subfolder)
     os.makedirs(save_dir, exist_ok=True)
@@ -32,8 +32,8 @@ def plot_subject_time_series(
 
     for subject in subject_ids:
         try:
-            X = np.load(os.path.join(datadir, f"feature_vector_full_{subject}.npy")).T
-            y = np.load(os.path.join(datadir, f"y_{subject}.npy")).reshape(-1)
+            X = np.load(os.path.join(datadir, f"ankle_feature_vector_full_{subject}.npy")).T
+            y = np.load(os.path.join(datadir, f"ankle_y_{subject}.npy")).reshape(-1)
             print(f"subject {subject}, X {X.shape}, y{y.shape}-------")
 
             # Downsampling to make easier to see
@@ -87,7 +87,7 @@ def plot_normalized_subject_time_series(
     duration_sec,
     stride,
     root_dir="SUBJECT_FEATURE_PLOTS",
-    subfolder="Normalized",
+    subfolder="Normalized Ankle",
 ):
     save_dir = os.path.join(root_dir, subfolder)
     os.makedirs(save_dir, exist_ok=True)
@@ -101,8 +101,8 @@ def plot_normalized_subject_time_series(
 
     for subject in subject_ids:
         try:
-            X = np.load(os.path.join(datadir, f"feature_vector_full_normalized_{subject}.npy")).T
-            y = np.load(os.path.join(datadir, f"y_normalized_{subject}.npy")).reshape(-1)
+            X = np.load(os.path.join(datadir, f"ankle_feature_vector_full_normalized_{subject}.npy")).T
+            y = np.load(os.path.join(datadir, f"ankle_y_normalized_{subject}.npy")).reshape(-1)
             # Downsampling to make easier to see
             # stride is downsampling factor so stride=100 -> 100x fewer points
             fs_down = fs / stride
@@ -145,11 +145,11 @@ def plot_normalized_subject_time_series(
 
 def main():
     datadir = "./DATASET/"
-    subject_ids = [1, 2, 3, 5, 6, 7, 8, 11]
+    subject_ids = [1, 3, 4, 5, 6, 7, 8, 11]
     fs = 100
     # ploting from start_time_sec to duration_sec
     start_time_sec = 100
-    duration_sec = 5
+    duration_sec = 2
     stride = 1
     # stride is downsampling factor so stride=100 -> 100x fewer points
 
