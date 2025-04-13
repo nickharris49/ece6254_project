@@ -74,7 +74,7 @@ def main():
     # Create and train the MLPRegressor - bc output angle is cts var.
     # # start with 1 hidden layer and go from there, 100 neurons
     # mlp = MLPRegressor(hidden_layer_sizes=(100,), max_iter=300, random_state=42)
-    mlp = MLPRegressor(hidden_layer_sizes=(100,100), max_iter=300, alpha=0.001, random_state=42)
+    mlp = MLPRegressor(hidden_layer_sizes=(100,100), max_iter=300, alpha=0.001, random_state=42,)
     mlp.fit(X_train, y_train)
 
     # Save the model parameters to a file

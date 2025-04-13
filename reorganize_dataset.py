@@ -37,7 +37,7 @@ def main():
 
     # create the 'dtype' for the recarray
     # this is similar to statically instantiating the keys of a python dictionary
-
+    subjects_ankle_base=[11]
     # iterate over the valid subjects
     for joint in ['knee', 'ankle']:
         for exo in ['exo', 'base']:

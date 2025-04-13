@@ -175,6 +175,10 @@ def get_biomech_from_subject(subject: int, clean_inds=[], exo=False):
         ankle_angle_r.append(angles['ankle_angle_r'])
         ankle_angle_l.append(angles['ankle_angle_l'])
 
+    biggie = np.concatenate(ankle_angle_r)
+    plt.plot(biggie)
+    plt.show(block=True)
+    1
     return (hip_flexion_r, hip_flexion_l, hip_adduction_r, hip_adduction_l, knee_angle_r, knee_angle_l, ankle_angle_r, ankle_angle_l)
 
 
