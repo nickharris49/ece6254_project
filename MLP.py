@@ -8,11 +8,12 @@ from sklearn.metrics import mean_squared_error, r2_score
 
 
 def main():
-    datadir = "./DATASET/"
+    datadir = "DATASET/"
 
     # # To run on stratified list of all subjects
     # List of subjects
-    subjects = [1, 2, 3, 5, 6, 7, 8, 11]  # Add all subject IDs here
+    subjects = [1, 3, 5, 6, 7, 8, 11]  # Add all subject IDs here
+    subjects = [5]
 
     # Initialize lists to hold data and labels
     X_list = []
@@ -21,8 +22,8 @@ def main():
 
     # Load data for each subject
     for subject in subjects:
-        X_subject = np.load(datadir + f"feature_vector_full_normalized_{subject}.npy")
-        y_subject = np.load(datadir + f"y_normalized_{subject}.npy").reshape(-1)
+        X_subject = np.load(datadir + f"ankle_feature_vector_full_normalized_{subject}.npy")
+        y_subject = np.load(datadir + f"ankle_y_normalized_{subject}.npy").reshape(-1)
         
         X_list.append(X_subject)
         y_list.append(y_subject)
@@ -78,13 +79,13 @@ def main():
     mlp.fit(X_train, y_train)
 
     # Save the model parameters to a file
-    joblib.dump(mlp, 'mlp_model2.pkl')
+    joblib.dump(mlp, 'Results/mlp_model.pkl')
 
     # Predictions for the test set
     y_pred_test = mlp.predict(X_test)
 
     # Save the predicted values for the test set to a file
-    np.save('y_pred_test2.npy', y_pred_test)
+    np.save('Results/y_pred_test_MLP.npy', y_pred_test)
 
     # Calculate Mean Squared Error for the test set
     mse_test = mean_squared_error(y_test, y_pred_test)
@@ -100,7 +101,7 @@ def main():
     end_time = time.time()
 
     # Save the predicted values for the training set to a file
-    np.save('y_pred_train2.npy', y_pred_train)
+    np.save('Results/y_pred_train_MLP.npy', y_pred_train)
 
     # Calculate Mean Squared Error for the training set
     mse_train = mean_squared_error(y_train, y_pred_train)
