@@ -138,7 +138,8 @@ def train_and_evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, me
 
 def main():
     # subjects = [1, 3, 4, 5, 6, 7, 8, 11]
-    subjects = [1,2,3,5,6,7,8,11]
+    # subjects = [1,2,3,5,6,7,8,11]
+    subjects = [1]
     datadir = "./DATASET/"
     results_dir = "results/tree_models"
     os.makedirs(os.path.join(results_dir, "values"), exist_ok=True)
@@ -150,8 +151,11 @@ def main():
         # X = np.load(os.path.join(datadir, f"ankle_feature_vector_full_normalized_{subject_id}.npy"))
         # y = np.load(os.path.join(datadir, f"ankle_y_normalized_{subject_id}.npy")).reshape(-1)
         # y_raw = np.load(os.path.join(datadir, f"ankle_y_{subject_id}.npy"))
-        X = np.load(os.path.join(datadir, f"feature_vector_100k_normalized_{subject_id}.npy")).reshape(-1,1)
-        y = np.load(os.path.join(datadir, f"feature_vector_5k_normalized_{subject_id}.npy")).reshape(-1)
+        # X = np.load(os.path.join(datadir, f"feature_vector_100k_normalized_{subject_id}.npy")).reshape(-1,1)
+        # y = np.load(os.path.join(datadir, f"feature_vector_5k_normalized_{subject_id}.npy")).reshape(-1)
+        X = np.load(os.path.join(datadir, f"feature_vector_100k_normalized_{subject_id}.npy"))
+        res_react_5k = np.load(os.path.join(datadir, f"feature_vector_5k_normalized_{subject_id}.npy"))
+        y = res_react_5k[:,1]   # 0: resistance, 1: reactance   
         y_raw = np.load(os.path.join(datadir, f"feature_vector_5k_{subject_id}.npy"))
         mean_y = np.mean(y_raw)
         std_y = np.std(y_raw)

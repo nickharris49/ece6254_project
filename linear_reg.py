@@ -124,8 +124,9 @@ def main():
         print(f"\n--- Subject {subject_id} ---")
         # X = np.load(os.path.join(base_dir, f"ankle_feature_vector_full_normalized_{subject_id}.npy"))
         # y = np.load(os.path.join(base_dir, f"ankle_y_normalized_{subject_id}.npy")).reshape(-1)
-        X = np.load(os.path.join(base_dir, f"feature_vector_100k_normalized_{subject_id}.npy")).reshape(-1,1)
-        y = np.load(os.path.join(base_dir, f"feature_vector_5k_normalized_{subject_id}.npy")).reshape(-1)
+        X = np.load(os.path.join(base_dir, f"feature_vector_100k_normalized_{subject_id}.npy"))
+        res_react_5k = np.load(os.path.join(base_dir, f"feature_vector_5k_normalized_{subject_id}.npy"))
+        y = res_react_5k[:,1]   # 0: resistance, 1: reactance       
         y_raw = np.load(os.path.join(base_dir, f"feature_vector_5k_{subject_id}.npy"))
 
         mean_y = np.mean(y_raw)
