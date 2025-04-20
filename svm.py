@@ -13,8 +13,9 @@ def main():
     datadir = "DATASET/"
     datafiles = os.listdir(datadir)
     
-    X_path = datadir + "ankle_feature_vector_100k_normalized_11.npy" # change this to change the input feature vector
-    y_path = datadir + "ankle_y_normalized_11.npy"
+    X_path = datadir + "ankle_feature_vector_full_11.npy" # change this to change the input feature vector
+
+    y_path = datadir + "ankle_y_11.npy"
 
     data_path = datadir + "ankle_base_11.npy"
 
@@ -23,7 +24,7 @@ def main():
     input = np.stack(input, axis=2)
     # input = np.reshape(input, (np.shape(input)[0], np.shape(input)[1]*np.shape(input)[2]))
 
-    output = full_data['ankle_angle_r']
+    # output = full_data['ankle_angle_r']
     # output = np.reshape(output, np.shape(output)[0]*np.shape(output)[1])
     # plt.plot(output[:9000])
     # plt.show(block=True)
@@ -43,15 +44,19 @@ def main():
 
     X = np.load(X_path)
     # compute magnitude (optional)
-    X = np.sqrt(np.square(X[:,0]) + np.square(X[:,0])).reshape(-1,1)
     y = np.load(y_path)
 
+    y = X[:,0]
+    X = X[:,-2:]
+
+    X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
+    y = (y - np.mean(y)) / np.std(y)
     # X = input
     # y = output
 
     # split into train, val, and test set
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, shuffle=False)
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.4, random_state=42, shuffle=False)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, shuffle=True)
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.4, random_state=42, shuffle=True)
     y_train = y_train.squeeze()
     y_val = y_val.squeeze()
     y_test = y_test.squeeze()

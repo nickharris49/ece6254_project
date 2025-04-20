@@ -99,7 +99,8 @@ def generate_lstm_windows_multiple_subs(window_size=50,
                           features=['knee_bioz_5k_resistance', 'knee_bioz_5k_reactance', 'knee_bioz_100k_resistance', 'knee_bioz_100k_reactance'],
                           output="knee_angle_l",
                           subjects = ['8', '11'],
-                          window_frequency=20):
+                          window_frequency=20,
+                          stratify=True):
     if os.getlogin() == 'nicholasharris':
         base_path = '/Users/nicholasharris/OneDrive - Georgia Institute of Technology/BioZ Dataset'
 
@@ -114,48 +115,73 @@ def generate_lstm_windows_multiple_subs(window_size=50,
 
     x_train = []
     y_train = []
-    cutoff = math.floor(len(subjects)*4/5)
-    for subject in subjects[:cutoff]:
-        data_file = "ankle_base_" + str(subject) + ".npy"
-
-        data = np.load(full_path + data_file)
-
-        # LSTM takes data of size (n_windows x window_size x num_features)
-        ## knee angle L (y output)
-        y_output = data[output]
-        y_output = (y_output - np.mean(y_output)) / np.std(y_output)
-        y_train.append(y_output)
-
-        x_input = []
-        for feature in features:
-            x_input.append(data[feature])
-
-        x_input = np.stack(x_input, axis=2)
-        x_input = (x_input - np.mean(x_input, axis = (0,1))) / np.std(x_input, axis=(0,1))
-        x_train.append(x_input)
-    
     x_test = []
     y_test = []
-    for subject in subjects[cutoff:]:
-        data_file = "ankle_base_" + str(subject) + ".npy"
+    if stratify:
+        for subject in subjects:
+            data_file = "ankle_base_" + str(subject) + ".npy"
 
-        data = np.load(full_path + data_file)
+            data = np.load(full_path + data_file)
+            cutoff = math.floor(len(data[0]) * 0.8)
 
-        # LSTM takes data of size (n_windows x window_size x num_features)
-        ## knee angle L (y output)
-        y_output = data[output]
-        y_output = (y_output - np.mean(y_output)) / np.std(y_output)
-        y_test.append(y_output)
 
-        x_input = []
-        for feature in features:
-            x_input.append(data[feature])
+            # LSTM takes data of size (n_windows x window_size x num_features)
+            ## knee angle L (y output)
+            y_output = data[output]
+            y_output = (y_output - np.mean(y_output)) / np.std(y_output)
+            y_train.append(y_output[:,:cutoff])
+            y_test.append(y_output[:,cutoff:])
 
-        x_input = np.stack(x_input, axis=2)
-        x_input = (x_input - np.mean(x_input, axis = (0,1))) / np.std(x_input, axis=(0,1))
-        x_test.append(x_input)
+            x_input = []
+            for feature in features:
+                x_input.append(data[feature])
+
+            x_input = np.stack(x_input, axis=2)
+            x_input = (x_input - np.mean(x_input, axis = (0,1))) / np.std(x_input, axis=(0,1))
+            x_train.append(x_input[:,:cutoff])
+            x_test.append(x_input[:,cutoff:])
+
+    else:
+        cutoff = math.floor(len(subjects)*4/5)
+        for subject in subjects[:cutoff]:
+            data_file = "ankle_base_" + str(subject) + ".npy"
+
+            data = np.load(full_path + data_file)
+
+            # LSTM takes data of size (n_windows x window_size x num_features)
+            ## knee angle L (y output)
+            y_output = data[output]
+            y_output = (y_output - np.mean(y_output)) / np.std(y_output)
+            y_train.append(y_output)
+
+            x_input = []
+            for feature in features:
+                x_input.append(data[feature])
+
+            x_input = np.stack(x_input, axis=2)
+            x_input = (x_input - np.mean(x_input, axis = (0,1))) / np.std(x_input, axis=(0,1))
+            x_train.append(x_input)
+        
+        for subject in subjects[cutoff:]:
+            data_file = "ankle_base_" + str(subject) + ".npy"
+
+            data = np.load(full_path + data_file)
+
+            # LSTM takes data of size (n_windows x window_size x num_features)
+            ## knee angle L (y output)
+            y_output = data[output]
+            y_output = (y_output - np.mean(y_output)) / np.std(y_output)
+            y_test.append(y_output)
+
+            x_input = []
+            for feature in features:
+                x_input.append(data[feature])
+
+            x_input = np.stack(x_input, axis=2)
+            x_input = (x_input - np.mean(x_input, axis = (0,1))) / np.std(x_input, axis=(0,1))
+            x_test.append(x_input)
     
-
+    
     x_train_windows = []
     y_train_windows = []
     x_test_windows = []

@@ -13,7 +13,7 @@ def main():
     WINDOW_SIZE = 20  # 1 sec window with 50 Hz - CHANGE THIS
     num_classes = 1 # one because this is regression
     test_results = []
-    batch_size=64
+    batch_size=32
 
     if torch.mps.is_available():
         device = torch.device('mps')
@@ -46,8 +46,8 @@ def main():
     # features = ['ankle_bioz_5k_resistance', 'ankle_bioz_5k_reactance', 'ankle_bioz_100k_resistance', 'ankle_bioz_100k_reactance']
     # output_feature = "ankle_angle_l"
 
-    features = ['ankle_bioz_5k_resistance', 'ankle_bioz_5k_reactance']
-    output_feature = 'ankle_bioz_100k_resistance'
+    features = ['ankle_bioz_100k_resistance', 'ankle_bioz_100k_reactance']
+    output_feature = 'ankle_bioz_5k_resistance'
     #subjects = ['3', '4', '5', '6', '7', '8', '11']
     subjects_ankle_base = [3, 4, 5, 6, 7, 8, 11]
 
@@ -57,8 +57,8 @@ def main():
     print(features)
     print("output feature")
     print(output_feature)
-    print("subject")
-    print(subject)
+    print("subjects")
+    print(subjects_ankle_base)
 
     # print("subjects")
     # print(subjects)
@@ -77,9 +77,7 @@ def main():
     test_y = torch.from_numpy(test_y.astype(np.float32))
     test_y = test_y.type(torch.FloatTensor).to(device)
 
-    tmp_x = np.squeeze(train_x[50].cpu().numpy())
-    plt.plot(tmp_x)
-    plt.show(block=True)
+
 
     trainset = Data.TensorDataset(train_x, train_y)
     trainloader = Data.DataLoader(dataset=trainset, batch_size=batch_size, shuffle=False, num_workers=0, drop_last=True)
@@ -95,14 +93,14 @@ def main():
                    n_classes=num_classes)  #
 
     # STATE DICT PATH
-    state_dict_path = "trained_state_dicts/weights.pth"
+    state_dict_path = "trained_state_dicts/conv_lstm_20_window.pth"
     state_dict = torch.load(state_dict_path, weights_only=True)
     net.load_state_dict(state_dict)
 
     ## check if GPU is available
     run_on_gpu = torch.mps.is_available()
     if (run_on_gpu):
-        print('Training on GPU!')
+        print('Predicting on GPU!')
     else:
         print('No GPU available, training on CPU; consider making n_epochs very small.')
     # run training function
@@ -118,7 +116,7 @@ def main():
     with torch.no_grad():
             # since I use cross validation, test set is basically validation set
         for batch_idx, (inputs, targets) in enumerate(trainloader):
-            test_h = tuple([each.data for each in test_h])
+            #test_h = tuple([each.data for each in test_h])
 
             if (run_on_gpu):
                 inputs, targets = inputs.to(device), targets.to(device)
@@ -133,11 +131,17 @@ def main():
     output = np.concatenate(output, axis=0)
     targets_big = [target.cpu().numpy() for target in targets_big]
     targets = np.concatenate(targets_big, axis=0)
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8,6))
     plt.title("train")
-    plt.plot(targets, alpha=0.8)
-    plt.plot(output, alpha=0.8)
+    plt.plot(targets, label='Actual Train')
+    plt.plot(output, label='Predicted Train')
+    plt.legend()
+    plt.title('ConvLSTM Actual vs Predicted 5kHz Resistance (Training Set)')
     plt.show(block=False)
+    mse_train = metrics.mean_squared_error(output, targets)
+    r2_train = metrics.r2_score(output, targets)
+    print(f'Mean Squared Error (Train Set): {mse_train:.2f}')
+    print(f'R² Score (Train Set): {r2_train:.2f}')
 
     
     output = []
@@ -161,10 +165,17 @@ def main():
     output = np.concatenate(output, axis=0)
     targets_big = [target.cpu().numpy() for target in targets_big]
     targets = np.concatenate(targets_big, axis=0)
-    fig2 = plt.figure()
+    fig2 = plt.figure(figsize=(8,6))
+    mse_test = metrics.mean_squared_error(output, targets)
+    r2_test = metrics.r2_score(output, targets)
+    print(f'Mean Squared Error (Train Set): {mse_test:.2f}')
+    print(f'R² Score (Train Set): {r2_test:.2f}')
     plt.title("test")
-    plt.plot(targets, alpha=0.8)
-    plt.plot(output, alpha=0.8)
+    plt.plot(targets[:179399], label='Actual Test')
+    plt.plot(output[:179399], label='Predicted Test', alpha=0.8)
+    plt.legend()
+    plt.title('ConvLSTM 5kHz Resistance Prediction (Subject 8)')
+
     plt.show(block=True)
     1
         

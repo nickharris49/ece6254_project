@@ -5,12 +5,14 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
+import math
 
 def main():
     datadir = "DATASET/"
 
     # List of subjects
     subjects = [1, 3, 5, 6, 7, 8, 11]  # Add all subject IDs here
+    subjects = [3, 4, 5, 6, 7, 8, 11]
     # subjects = [1]
 
     # Initialize lists to hold data and labels
@@ -28,6 +30,7 @@ def main():
         subject_list.extend([subject] * len(y_subject))
 
     # Combine data from all subjects
+
     X = np.concatenate(X_list, axis=0)
     y = np.concatenate(y_list, axis=0)
     subjects_array = np.array(subject_list)
@@ -53,6 +56,14 @@ def main():
         X_temp, y_temp, subjects_temp, test_size=0.4, random_state=42, shuffle=False
     )
 
+    ## NICK'S MODIFICATIONS TO GET THE TRAIN/TEST SPLIT ALL SET
+    cutoff = math.floor(len(X_list)*4/5)
+    X_train = np.concatenate(X_list[:cutoff], axis=0)[:, -2:]
+    X_test = np.concatenate(X_list[cutoff:], axis=0)[:, -2:]
+    y_train = np.concatenate(X_list[:cutoff], axis=0)[:, 0]
+    y_test = np.concatenate(X_list[cutoff:], axis=0)[:, 0]
+    plt.plot(X_test)
+    plt.show(block=True)
     print(f"Train Set: X={X_train.shape}, y={y_train.shape}")
     print(f"Validation Set: X={X_val.shape}, y={y_val.shape}")
     print(f"Test Set: X={X_test.shape}, y={y_test.shape}")
@@ -66,7 +77,7 @@ def main():
     start_time = time.time()
 
     # Create and train the MLPRegressor
-    mlp = MLPRegressor(hidden_layer_sizes=(100, 100), max_iter=300, alpha=0.001, random_state=42)
+    mlp = MLPRegressor(hidden_layer_sizes=(2, 4, 4, 2), max_iter=300, alpha=0.001, random_state=42, verbose=True)
     mlp.fit(X_train, y_train)
 
     # Save the model parameters to a file
