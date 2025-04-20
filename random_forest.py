@@ -18,26 +18,6 @@ This script trains two regression models (Random Forest and XGBoost).
 - `xgboost`
 """
 
-"""
-This script trains two regression models (Random Forest and XGBoost).
-
-1. Loads data from the "./DATASET/" directory.
-2. Splits the data into training, validation, and test sets.
-3. Tunes hyperparameters for both Random Forest and XGBoost using Optuna.
-4. Trains both models using the best hyperparameters found.
-5. Evaluates the models on validation and test sets, showing the following metrics:
-   - Mean Squared Error (MSE)
-   - Mean Absolute Error (MAE)
-   - R2 Score
-
-### Dependencies:
-- `numpy`
-- `optuna`
-- `scikit-learn`
-- `tqdm`
-- `xgboost`
-"""
-
 import numpy as np
 import time
 import optuna
@@ -157,7 +137,8 @@ def train_and_evaluate_models(X_train, X_val, X_test, y_train, y_val, y_test, me
     return results
 
 def main():
-    subjects = [1, 3, 4, 5, 6, 7, 8, 11]
+    # subjects = [1, 3, 4, 5, 6, 7, 8, 11]
+    subjects = [1,2,3,5,6,7,8,11]
     datadir = "./DATASET/"
     results_dir = "results/tree_models"
     os.makedirs(os.path.join(results_dir, "values"), exist_ok=True)
@@ -166,9 +147,12 @@ def main():
     all_results = []
     for subject_id in subjects:
         print(f"\n--- Subject {subject_id} ---")
-        X = np.load(os.path.join(datadir, f"ankle_feature_vector_full_normalized_{subject_id}.npy"))
-        y = np.load(os.path.join(datadir, f"ankle_y_normalized_{subject_id}.npy")).reshape(-1)
-        y_raw = np.load(os.path.join(datadir, f"ankle_y_{subject_id}.npy"))
+        # X = np.load(os.path.join(datadir, f"ankle_feature_vector_full_normalized_{subject_id}.npy"))
+        # y = np.load(os.path.join(datadir, f"ankle_y_normalized_{subject_id}.npy")).reshape(-1)
+        # y_raw = np.load(os.path.join(datadir, f"ankle_y_{subject_id}.npy"))
+        X = np.load(os.path.join(datadir, f"feature_vector_100k_normalized_{subject_id}.npy")).reshape(-1,1)
+        y = np.load(os.path.join(datadir, f"feature_vector_5k_normalized_{subject_id}.npy")).reshape(-1)
+        y_raw = np.load(os.path.join(datadir, f"feature_vector_5k_{subject_id}.npy"))
         mean_y = np.mean(y_raw)
         std_y = np.std(y_raw)
 
@@ -179,7 +163,7 @@ def main():
         all_results.extend(results)
 
     df_results = pd.DataFrame(all_results)
-    df_results.to_csv(os.path.join(results_dir, "values", "tree_model_results.csv"), index=False)
+    df_results.to_csv(os.path.join(results_dir, "values", "tree_model_results_5k_100k.csv"), index=False)
     print("\n All results saved!")
 
 if __name__ == '__main__':

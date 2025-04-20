@@ -108,7 +108,8 @@ def plot_predictions(y_test, y_pred, mean_y, std_y, label="Model", max_points=50
     return mse, rmse, mae, r2
 
 def main():
-    subjects = [1, 3, 4, 5, 6, 7, 8, 11]
+    # subjects = [1, 3, 4, 5, 6, 7, 8, 11]
+    subjects = [1,2,3,5,6,7,8,11]
     base_dir = "./DATASET/"
     results_dir = "Results/linear_regression"
     values_dir = os.path.join(results_dir, "values")
@@ -121,12 +122,16 @@ def main():
 
     for subject_id in subjects:
         print(f"\n--- Subject {subject_id} ---")
-        X = np.load(os.path.join(base_dir, f"ankle_feature_vector_full_normalized_{subject_id}.npy"))
-        y = np.load(os.path.join(base_dir, f"ankle_y_normalized_{subject_id}.npy")).reshape(-1)
-        y_raw = np.load(os.path.join(base_dir, f"ankle_y_{subject_id}.npy"))
+        # X = np.load(os.path.join(base_dir, f"ankle_feature_vector_full_normalized_{subject_id}.npy"))
+        # y = np.load(os.path.join(base_dir, f"ankle_y_normalized_{subject_id}.npy")).reshape(-1)
+        X = np.load(os.path.join(base_dir, f"feature_vector_100k_normalized_{subject_id}.npy")).reshape(-1,1)
+        y = np.load(os.path.join(base_dir, f"feature_vector_5k_normalized_{subject_id}.npy")).reshape(-1)
+        y_raw = np.load(os.path.join(base_dir, f"feature_vector_5k_{subject_id}.npy"))
 
         mean_y = np.mean(y_raw)
         std_y = np.std(y_raw)
+
+        print(f"Subject {subject_id}: X.shape = {X.shape}, y.shape = {y.shape}")
 
         X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
         X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.4, random_state=42)
@@ -154,51 +159,8 @@ def main():
         })
 
     df_results = pd.DataFrame(all_results)
-    df_results.to_csv(os.path.join(values_dir, "linear_regression_results.csv"), index=False)
+    df_results.to_csv(os.path.join(values_dir, "linear_regression_5k_100k.csv"), index=False)
     print("\n All results saved!")
 
 if __name__ == '__main__':
     main()
-
-    # datadir = "DATASET/"
-    # X = np.load(os.path.join(datadir, "ankle_feature_vector_full_normalized_1.npy"))
-    # y = np.load(os.path.join(datadir, "ankle_y_normalized_1.npy"))
-    # y_raw = np.load(os.path.join(datadir, "ankle_y_1.npy"))
-
-    # mean_y = np.mean(y_raw)
-    # std_y = np.std(y_raw)
-
-    # X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
-    # X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.4, random_state=42)
-
-    # y_train = y_train.ravel()
-    # y_val = y_val.ravel()
-    # y_test = y_test.ravel()
-
-    # print(f"Train set shapes: X={X_train.shape}, y={y_train.shape}")
-    # print(f"Validation set shapes: X={X_val.shape}, y={y_val.shape}")
-    # print(f"Test set shapes: X={X_test.shape}, y={y_test.shape}")
-
-    # check_feature_correlation(X_train, y_train)
-
-    # X_train_cleaned, y_train_cleaned = check_outliers(X_train, y_train)
-
-    # vif_vals_before = check_vif(X_train_cleaned)
-    # if any(vif > 10 for vif in vif_vals_before):
-    #     print("High VIF detected. Applying PCA...")
-    #     X_final = apply_pca(X_train_cleaned)
-    #     check_vif(X_final)
-    # else:
-    #     X_final = X_train_cleaned
-
-    # model = train_and_evaluate_models(X_final, X_val, y_train_cleaned, y_val)
-
-    # plot_and_evaluate_predictions(
-    #     model=model,
-    #     X_test=X_test,
-    #     y_test=y_test,
-    #     mean_y=mean_y,
-    #     std_y=std_y,
-    #     label="Linear Regression",
-    #     max_points=100
-    # )
